@@ -11,7 +11,7 @@ function App() {
     setError(null);
     try {
       const response = await fetch(
-        `https://loadimages.ztnaut.com?image=${imageNumber}`,
+        `https://imagesapi.ztnaut.com?image=${imageNumber}`,
         {
           method: "GET",
         }
