@@ -1,32 +1,26 @@
 import React, { useState, useEffect } from "react";
 
 function App() {
-  const [image, setImage] = useState(null); // State to store the image URL
-  const [loading, setLoading] = useState(false); // Loading state
-  const [error, setError] = useState(null); // Error state
+  const [image, setImage] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  // Function to fetch image as a Blob (binary data)
+  // 👉 Function to fetch image from blob (used for ?image query)
   const fetchImage = async (imageNumber) => {
     setLoading(true);
     setError(null);
     try {
       const response = await fetch(
-        `https://imagesapi.ztnaut.com?image=${imageNumber}`,
-        {
-          method: "GET",
-        }
+        `https://imagesapi.ztnaut.com?image=${imageNumber}`
       );
 
       if (!response.ok) {
-        throw new Error("Failed to fetch image");
+        throw new Error("Failed to fetch image from image query param.");
       }
 
-      // Convert the response to a Blob
       const imageBlob = await response.blob();
-
-      // Create an object URL from the Blob
       const imageUrl = URL.createObjectURL(imageBlob);
-      setImage(imageUrl); // Store the image URL
+      setImage(imageUrl);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -34,36 +28,63 @@ function App() {
     }
   };
 
-  // Function to get the image query parameter from the URL
-  const getImageFromQuery = () => {
-    const urlParams = new URLSearchParams(window.location.search);
-    return urlParams.get("image"); // Get the 'image' query parameter
+  // 👉 Function to fetch image URL from API (used for ?imagelink)
+  const fetchImageFromLinkAPI = async (imageNumber) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await fetch(
+        `https://imagesapi.ztnaut.com/api/images/${imageNumber}`
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch image from imagelink API.");
+      }
+
+      const data = await response.json();
+      if (!data.imageUrl) {
+        throw new Error("Image URL not found in API response.");
+      }
+
+      setImage(data.imageUrl); // Direct URL, not blob
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Fetch image based on the query parameter on page load
-  useEffect(() => {
-    const imageParam = getImageFromQuery();
-    if (imageParam) {
-      fetchImage(imageParam);
-    }
-  }, []); // Only run on mount
+  // 🔍 Get query params from URL
+  const getQueryParams = () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    return {
+      image: urlParams.get("image"),
+      imagelink: urlParams.get("imagelink"),
+    };
+  };
 
-  // Handle keypress event (Spacebar)
+  // 🧠 On mount, check query parameters and fetch accordingly
+  useEffect(() => {
+    const { image, imagelink } = getQueryParams();
+
+    if (imagelink !== null) {
+      fetchImageFromLinkAPI(imagelink); // e.g., ?imagelink=true
+    } else if (image) {
+      fetchImage(image); // e.g., ?image=5
+    }
+  }, []);
+
+  // 🧠 Handle Spacebar
   const handleKeyPress = (event) => {
     if (event.code === "Space") {
-      const randomImageNumber = Math.floor(Math.random() * 10) + 1; // Generate a random number (e.g., 1-100)
+      const randomImageNumber = Math.floor(Math.random() * 10) + 1;
       fetchImage(randomImageNumber);
     }
   };
 
-  // Add event listener for Spacebar key press on mount
   useEffect(() => {
     window.addEventListener("keydown", handleKeyPress);
-
-    // Cleanup the event listener when the component unmounts
-    return () => {
-      window.removeEventListener("keydown", handleKeyPress);
-    };
+    return () => window.removeEventListener("keydown", handleKeyPress);
   }, []);
 
   return (
@@ -75,13 +96,11 @@ function App() {
         {error && <p className="text-xl text-red-500">Error: {error}</p>}
 
         {image ? (
-          <div>
-            <img
-              src={image} // Using the Object URL for the image
-              alt="Random Image"
-              className="max-w max-h object-cover mx-auto rounded-lg shadow-lg"
-            />
-          </div>
+          <img
+            src={image}
+            alt="Random"
+            className="max-w max-h object-cover mx-auto rounded-lg shadow-lg"
+          />
         ) : (
           <p className="text-xl text-gray-600">
             <span className="font-bold">Scenario 2: </span>Press the Spacebar to
@@ -91,12 +110,6 @@ function App() {
       </div>
     </div>
   );
-
-  // return (
-  //   <div className="flex items-center justify-center h-screen">
-  //     <h1 class="text-3xl font-bold underline">Hello Vite!</h1>
-  //   </div>
-  // );
 }
 
 export default App;
