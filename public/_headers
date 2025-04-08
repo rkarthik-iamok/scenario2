@@ -1,7 +1,10 @@
 # This is a comment
 
 /
-    Cache-Control: public, max-age=300
+    Cache-Control: public, max-age=3600
+
+/assets/*
+    Cache-Control: public, max-age=3600
 
 /cf.webp
     Cache-Control: public, max-age=7200
