@@ -1,0 +1,7 @@
+# This is a comment
+
+/
+    Cache-Control: public, max-age=300
+
+/cf.webp
+    Cache-Control: public, max-age=7200
